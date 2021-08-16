@@ -1,0 +1,13 @@
+server:
+  port: 4000
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:5000/eureka/ # 作为客户端访问注册中心访问的url
+spring:
+  application:
+    name: atguigu-consumer # 为微服务工程设置一个应用名称,必须添加，以便以后客户端使用
+#  cloud:
+#    loadbalancer:
+#      ribbon:
+#        enabled: true # 默认使用了ribbon负载均衡 在2020.0.2版本 而且ribbon默认也都导入了客户端包

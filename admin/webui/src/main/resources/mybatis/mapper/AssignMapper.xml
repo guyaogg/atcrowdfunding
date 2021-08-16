@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.crowd.mapper.AssignMapper">
+    <resultMap id="BaseResultMap" type="com.atguigu.crowd.pojo.Role">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+    </resultMap>
+    <sql id="Query_inner">
+        select role_id
+        from inner_admin_role
+        where #{adminId} = admin_id
+    </sql>
+    <delete id="deleteOldRoleList">
+        delete
+        from inner_admin_role
+        where admin_id = #{adminId}
+    </delete>
+    <delete id="deleteOldAuthList">
+        delete
+        from inner_role_auth
+        where role_id = #{roleId}
+    </delete>
+
+    <insert id="insertNewRoleList" parameterType="list">
+        insert into inner_admin_role (admin_id,role_id)
+        values
+        <foreach collection="roleIdList" item="roleId" separator=",">
+            (#{adminId},#{roleId})
+        </foreach>
+    </insert>
+    <insert id="insertNewAuthList">
+        insert into inner_role_auth (role_id,auth_id)
+        values
+        <foreach collection="authIdArray" item="authId" separator=",">
+            (#{roleId},#{authId})
+        </foreach>
+    </insert>
+    <select id="selectAssign" resultMap="BaseResultMap">
+        select * from t_role where id in (
+        <include refid="Query_inner"/>
+        )
+    </select>
+    <select id="selectUnAssign" resultMap="BaseResultMap">
+        select * from t_role where id not in (
+        <include refid="Query_inner"/>
+        )
+    </select>
+    <select id="selectRoleAuthById" resultType="int">
+        select auth_id
+        from inner_role_auth
+        where role_id = #{roleId}
+    </select>
+    <select id="getRoleAuthNameById" resultType="java.lang.String">
+        SELECT DISTINCT t_auth.`name`
+        FROM t_auth
+                 LEFT JOIN inner_role_auth ON t_auth.`id` = inner_role_auth.`auth_id`
+                 LEFT JOIN inner_admin_role ON inner_role_auth.`role_id` = inner_admin_role.`role_id`
+        WHERE inner_admin_role.`admin_id` = #{adminId}
+          and t_auth.`name` != "" and t_auth.`name` is not null;
+    </select>
+</mapper>

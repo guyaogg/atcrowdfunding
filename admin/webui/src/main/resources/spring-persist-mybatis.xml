@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+
+    <context:component-scan base-package="com.atguigu.crowd.service">
+    </context:component-scan>
+    <context:component-scan base-package="com.atguigu.crowd.mapper">
+    </context:component-scan>
+    <!--    数据源=======================================================-->
+    <!--    引入properties-->
+    <context:property-placeholder location="classpath:jdbc.properties"></context:property-placeholder>
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.user}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+
+    <!--    Mybatis整合=============================================-->
+    <bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--        指定mybatis全局配置文件-->
+        <property name="configLocation" value="classpath:mybatis/mybatis-config.xml"></property>
+        <property name="dataSource" ref="dataSource"></property>
+        <!--        指定mybatis，mapper文件位置-->
+        <property name="mapperLocations" value="classpath:mybatis/mapper/*.xml"></property>
+<!--        配置插件,也可在核心配置文件中配置-->
+<!--        <property name="plugins">-->
+<!--            <array>-->
+<!--                <bean class="com.github.pagehelper.PageHelper">-->
+<!--                    &lt;!&ndash;                配置相关属性&ndash;&gt;-->
+<!--                    <property name="properties">-->
+<!--                        <props>-->
+<!--&lt;!&ndash;&lt;!&ndash;                            // 配置数据库方言&ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;                            <prop key="dialect">mysql</prop>&ndash;&gt;-->
+<!--&lt;!&ndash;                            页码修正&ndash;&gt;-->
+<!--                            <prop key="reasonable">true</prop>-->
+<!--                        </props>-->
+<!--                    </property>-->
+<!--                </bean>-->
+
+<!--            </array>-->
+<!--        </property>-->
+    </bean>
+
+    <!--    配置扫描器,将mybatis接口实现加入ioc容器-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--        扫描所有dao层-->
+        <property name="basePackage" value="com.atguigu.crowd.mapper"></property>
+    </bean>
+    <!--    配置批量sqlsession-->
+    <bean id="sessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+<!--        <constructor-arg name="executorType" value="BATCH"></constructor-arg>-->
+        <constructor-arg name="sqlSessionFactory" ref="sessionFactory"></constructor-arg>
+    </bean>
+
+    <!--    事务控制===================================================-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--        控制数据源-->
+        <property name="dataSource" ref="dataSource"></property>
+
+    </bean>
+    <!--    使用xml配置事务(重点),或注解-->
+    <aop:config>
+        <!--        切入点表达式-->
+        <aop:pointcut id="txPoint" expression="execution(* *..*ServiceImpl.*(..))"/>
+        <!--        配置事务增强-->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPoint"/>
+    </aop:config>
+    <!--    配置事务增强,事务如果切入,后面名字默认transactionManager可以省-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!--            所有查询方法，只读-->
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="count*" read-only="true"/>
+            <tx:method name="query*" read-only="true"/>
+            <!--            增删改方法都是事务方法,默认REQUIRED，添加事务方法,可省(可能被上级事务回滚
+                                                REQUIRES_NEW自己总是开启新事务
+                                            rollback：默认运行时异常回滚-->
+
+            <tx:method name="save*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+            <tx:method name="update*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+            <tx:method name="remove*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+            <tx:method name="batch*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+
+        </tx:attributes>
+    </tx:advice>
+
+    <!--    核心点:数据源\与mybatis整合\事务控制-->
+
+</beans>

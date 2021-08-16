@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--    设置-->
+    <settings>
+        <!--        标准的日志实现-->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+        <!--        驼峰命名自动映射-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--        显示开启全局缓存,虽然默认开启-->
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+    <!--    可以给实体类起别名-->
+    <typeAliases>
+        <!--        设置类别名,类少-->
+        <!--        <typeAlias type="com.kuang.pojo.Bolg" alias="Bolg"/>-->
+        <!--        设置包别名，雷多-->
+        <package name="com.atguigu.crowd.pojo"/>
+    </typeAliases>
+    <plugins>
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!--            跳转分页合理化-->
+            <property name="reasonable" value="true"/>
+        </plugin>
+    </plugins>
+
+
+</configuration>
